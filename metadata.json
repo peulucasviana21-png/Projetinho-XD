@@ -1,5 +1,0 @@
-{
-  "name": "Calculadora TMB",
-  "description": "App para cálculo de TMB e Gasto Calórico Diário com navegação inferior para Perfil, Refeições e Configurações com troca de tema e roda de cores hexadecimal.",
-  "requestFramePermissions": []
-}
