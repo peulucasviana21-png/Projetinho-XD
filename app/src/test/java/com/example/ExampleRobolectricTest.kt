@@ -128,4 +128,59 @@ class ExampleRobolectricTest {
     assertEquals(AppThemeMode.LIGHT, loaded.themeMode)
     assertEquals("#FF5722", loaded.accentColorHex)
   }
+
+  @Test
+  fun `verify water intake requirement calculation`() {
+    // 70kg sedentário -> 70 * 35 = 2450 ml
+    val waterSedentary = MetabolicCalculator.calculateWaterIntake(70.0, ActivityLevel.SEDENTARY)
+    assertEquals(2450, waterSedentary)
+
+    // 80kg intenso -> 80 * 40 = 3200 ml
+    val waterIntense = MetabolicCalculator.calculateWaterIntake(80.0, ActivityLevel.INTENSE)
+    assertEquals(3200, waterIntense)
+  }
+
+  @Test
+  fun `verify user profile with avatar banner and water persistence`() = runBlocking {
+    val profile = MetabolicCalculator.calculate(
+      weightKg = 75.0,
+      heightCm = 180.0,
+      ageYears = 25,
+      gender = Gender.MALE,
+      activityLevel = ActivityLevel.MODERATE,
+      userName = "Alex Silva",
+      avatarId = "avatar_2",
+      bannerId = "banner_3"
+    )
+
+    repository.saveUserProfile(profile)
+    val saved = repository.userProfileFlow.first()
+    assertNotNull(saved)
+    assertEquals("Alex Silva", saved?.userName)
+    assertEquals("avatar_2", saved?.avatarId)
+    assertEquals("banner_3", saved?.bannerId)
+    assertEquals(2850, saved?.dailyWaterRequirementMl) // 75 * 38 = 2850 ml
+  }
+
+  @Test
+  fun `verify user profile with custom avatar and banner file paths`() = runBlocking {
+    val profile = MetabolicCalculator.calculate(
+      weightKg = 68.0,
+      heightCm = 172.0,
+      ageYears = 28,
+      gender = Gender.FEMALE,
+      activityLevel = ActivityLevel.LIGHT,
+      userName = "Mariana Costa",
+      customAvatarUri = "/data/user/0/com.example/files/custom_avatar_123.png",
+      customBannerUri = "/data/user/0/com.example/files/custom_banner_456.png"
+    )
+
+    repository.saveUserProfile(profile)
+    val saved = repository.userProfileFlow.first()
+    assertNotNull(saved)
+    assertEquals("Mariana Costa", saved?.userName)
+    assertEquals("/data/user/0/com.example/files/custom_avatar_123.png", saved?.customAvatarUri)
+    assertEquals("/data/user/0/com.example/files/custom_banner_456.png", saved?.customBannerUri)
+  }
 }
+

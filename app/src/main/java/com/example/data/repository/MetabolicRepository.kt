@@ -57,6 +57,7 @@ class MetabolicRepository(
         } catch (_: Exception) {
           ActivityLevel.SEDENTARY
         }
+        val water = if (it.waterMl > 0) it.waterMl else (it.weightKg * 35).toInt()
         MetabolicCalculationResult(
           bmr = it.bmr,
           dailyCaloricExpenditure = it.dailyExpenditure,
@@ -64,7 +65,13 @@ class MetabolicRepository(
           weightKg = it.weightKg,
           heightCm = it.heightCm,
           gender = gender,
-          activityLevel = activity
+          activityLevel = activity,
+          dailyWaterRequirementMl = water,
+          userName = it.userName,
+          avatarId = it.avatarId,
+          bannerId = it.bannerId,
+          customAvatarUri = it.customAvatarUri,
+          customBannerUri = it.customBannerUri
         )
       }
     }
@@ -73,13 +80,19 @@ class MetabolicRepository(
     userProfileDao.saveUserProfile(
       UserProfileEntity(
         id = 1,
+        userName = result.userName,
+        avatarId = result.avatarId,
+        bannerId = result.bannerId,
+        customAvatarUri = result.customAvatarUri,
+        customBannerUri = result.customBannerUri,
         gender = result.gender.name,
         age = result.age,
         weightKg = result.weightKg,
         heightCm = result.heightCm,
         activityLevel = result.activityLevel.name,
         bmr = result.bmr,
-        dailyExpenditure = result.dailyCaloricExpenditure
+        dailyExpenditure = result.dailyCaloricExpenditure,
+        waterMl = result.dailyWaterRequirementMl
       )
     )
   }

@@ -76,15 +76,13 @@ fun HubBottomNavigationBar(
         HubTab.entries.forEach { tab ->
           val isSelected = tab == selectedTab
           val testTag = when (tab) {
-            HubTab.PROFILE -> "tab_profile"
             HubTab.MEALS -> "tab_meals"
-            HubTab.SETTINGS -> "tab_settings"
+            HubTab.PROFILE -> "tab_profile"
           }
 
           val icon: ImageVector = when (tab) {
-            HubTab.PROFILE -> if (isSelected) Icons.Filled.Person else Icons.Outlined.Person
             HubTab.MEALS -> if (isSelected) Icons.Filled.Restaurant else Icons.Outlined.Restaurant
-            HubTab.SETTINGS -> if (isSelected) Icons.Filled.Settings else Icons.Outlined.Settings
+            HubTab.PROFILE -> if (isSelected) Icons.Filled.Person else Icons.Outlined.Person
           }
 
           val interactionSource = remember { MutableInteractionSource() }

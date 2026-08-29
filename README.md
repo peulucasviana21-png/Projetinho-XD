@@ -1,15 +1,21 @@
+# Calculadora TMB
 
+Aplicativo Android para cálculo de Taxa Metabólica Basal (TMB), gasto calórico diário e acompanhamento de refeições, com dados armazenados localmente.
 
-##ESSE CODIGO È PURAMENTE VIBECODE, NÃO LEVE A SERIO
+## Build
 
+O projeto usa Gradle e pode gerar um APK de debug com:
 
-## Run Locally
+```bash
+./gradlew assembleDebug
+```
 
-**Prerequisites:**  [Android Studio](https://developer.android.com/studio)
+O APK será gerado em `app/build/outputs/apk/debug/app-debug.apk`.
 
+## GitHub Actions
 
-1. Open Android Studio
-2. Select **Open** and choose the directory containing this project
-3. Allow Android Studio to fix any incompatibilities as it imports the project.
-5. Remove this line from the app's `build.gradle.kts` file: `signingConfig = signingConfigs.getByName("debugConfig")`
-6. Run the app on an emulator or physical device
+O workflow em `.github/workflows/build-apk.yml` gera o APK automaticamente e o disponibiliza como Artifact.
+
+## Versão atual
+
+**1.1 (versionCode 2)**

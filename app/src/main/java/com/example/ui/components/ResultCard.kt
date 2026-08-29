@@ -200,6 +200,93 @@ fun ResultCard(
         )
       }
 
+      Spacer(modifier = Modifier.height(10.dp))
+
+      // Highlighted Metric 3: Meta de Ingestão de Água Diária
+      val waterLiters = String.format(Locale("pt", "BR"), "%.1f", result.dailyWaterRequirementLiters)
+      val waterGlasses = (result.dailyWaterRequirementMl / 250.0).let { "%.0f".format(Locale.US, it) }
+
+      Column(
+        modifier = Modifier
+          .fillMaxWidth()
+          .clip(RoundedCornerShape(8.dp))
+          .background(colors.surfaceVariant)
+          .border(1.dp, colors.borderSubtle, RoundedCornerShape(8.dp))
+          .padding(14.dp)
+          .testTag("water_intake_result")
+      ) {
+        Row(
+          modifier = Modifier.fillMaxWidth(),
+          horizontalArrangement = Arrangement.SpaceBetween,
+          verticalAlignment = Alignment.CenterVertically
+        ) {
+          Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(6.dp)
+          ) {
+            Text(text = "💧", fontSize = 14.sp)
+            Text(
+              text = "Água Necessária por Dia",
+              style = MaterialTheme.typography.bodySmall.copy(
+                color = colors.textPrimary,
+                fontSize = 12.sp,
+                fontWeight = FontWeight.SemiBold
+              )
+            )
+          }
+
+          Box(
+            modifier = Modifier
+              .clip(RoundedCornerShape(4.dp))
+              .background(colors.accent.copy(alpha = 0.15f))
+              .padding(horizontal = 6.dp, vertical = 2.dp)
+          ) {
+            Text(
+              text = "~$waterGlasses copos (250ml)",
+              style = MaterialTheme.typography.labelSmall.copy(
+                color = colors.accent,
+                fontWeight = FontWeight.Medium,
+                fontSize = 10.sp
+              )
+            )
+          }
+        }
+
+        Spacer(modifier = Modifier.height(4.dp))
+
+        Row(
+          verticalAlignment = Alignment.Bottom,
+          horizontalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+          Text(
+            text = "$waterLiters L",
+            style = MaterialTheme.typography.headlineMedium.copy(
+              color = colors.textPrimary,
+              fontWeight = FontWeight.Bold,
+              fontSize = 26.sp
+            )
+          )
+          Text(
+            text = "(${result.dailyWaterRequirementMl} ml / dia)",
+            style = MaterialTheme.typography.bodyMedium.copy(
+              color = colors.textTertiary,
+              fontWeight = FontWeight.Normal,
+              fontSize = 13.sp
+            ),
+            modifier = Modifier.padding(bottom = 3.dp)
+          )
+        }
+
+        Text(
+          text = "Recomendação base de hidratação calculada com base no seu peso (${result.weightKg} kg) e nível de atividade.",
+          style = MaterialTheme.typography.bodySmall.copy(
+            color = colors.textTertiary,
+            fontSize = 11.sp
+          ),
+          modifier = Modifier.padding(top = 2.dp)
+        )
+      }
+
       Spacer(modifier = Modifier.height(16.dp))
 
       HorizontalDivider(color = colors.borderSubtle, thickness = 1.dp)

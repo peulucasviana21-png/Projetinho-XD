@@ -28,9 +28,14 @@ import java.time.format.DateTimeFormatter
 import java.time.temporal.TemporalAdjusters
 
 enum class HubTab(val title: String, val subtitle: String) {
-  PROFILE("Perfil", "TMB"),
   MEALS("Refeições", "Calorias"),
-  SETTINGS("Configurações", "Aparência")
+  PROFILE("Perfil", "Dados & Ajustes")
+}
+
+enum class ProfileSubSection(val title: String, val icon: String) {
+  BODY_DATA("Meus Dados", "📊"),
+  APPEARANCE("Aparência & Cores", "🎨"),
+  ABOUT("Sobre o App", "ℹ️")
 }
 
 enum class TimeframeMode(val label: String) {
@@ -49,6 +54,11 @@ data class ProfileFormState(
   val heightInput: String = "",
   val gender: Gender = Gender.MALE,
   val activityLevel: ActivityLevel = ActivityLevel.SEDENTARY,
+  val userName: String = "Meu Perfil",
+  val avatarId: String = "avatar_1",
+  val bannerId: String = "banner_1",
+  val customAvatarUri: String? = null,
+  val customBannerUri: String? = null,
   val result: MetabolicCalculationResult? = null,
   val ageError: String? = null,
   val weightError: String? = null,
@@ -75,6 +85,15 @@ data class AddMealDialogState(
   val caloriesError: String? = null
 )
 
+data class EditHeaderDialogState(
+  val isVisible: Boolean = false,
+  val userName: String = "",
+  val avatarId: String = "avatar_1",
+  val bannerId: String = "banner_1",
+  val customAvatarUri: String? = null,
+  val customBannerUri: String? = null
+)
+
 class MetabolicViewModel(
   private val repository: MetabolicRepository
 ) : ViewModel() {
@@ -82,8 +101,14 @@ class MetabolicViewModel(
   private val _selectedTab = MutableStateFlow(HubTab.PROFILE)
   val selectedTab: StateFlow<HubTab> = _selectedTab.asStateFlow()
 
+  private val _profileSubSection = MutableStateFlow(ProfileSubSection.BODY_DATA)
+  val profileSubSection: StateFlow<ProfileSubSection> = _profileSubSection.asStateFlow()
+
   private val _profileState = MutableStateFlow(ProfileFormState())
   val profileState: StateFlow<ProfileFormState> = _profileState.asStateFlow()
+
+  private val _editHeaderDialogState = MutableStateFlow(EditHeaderDialogState())
+  val editHeaderDialogState: StateFlow<EditHeaderDialogState> = _editHeaderDialogState.asStateFlow()
 
   private val _timeframeMode = MutableStateFlow(TimeframeMode.DAILY)
   val timeframeMode: StateFlow<TimeframeMode> = _timeframeMode.asStateFlow()
@@ -121,14 +146,19 @@ class MetabolicViewModel(
     // Populate form with saved profile if available
     viewModelScope.launch {
       repository.userProfileFlow.collect { saved ->
-        if (saved != null && _profileState.value.result == null) {
+        if (saved != null) {
           _profileState.update { current ->
             current.copy(
-              ageInput = saved.age.toString(),
-              weightInput = if (saved.weightKg % 1.0 == 0.0) saved.weightKg.toInt().toString() else saved.weightKg.toString(),
-              heightInput = if (saved.heightCm % 1.0 == 0.0) saved.heightCm.toInt().toString() else saved.heightCm.toString(),
+              ageInput = if (current.ageInput.isEmpty()) saved.age.toString() else current.ageInput,
+              weightInput = if (current.weightInput.isEmpty()) (if (saved.weightKg % 1.0 == 0.0) saved.weightKg.toInt().toString() else saved.weightKg.toString()) else current.weightInput,
+              heightInput = if (current.heightInput.isEmpty()) (if (saved.heightCm % 1.0 == 0.0) saved.heightCm.toInt().toString() else saved.heightCm.toString()) else current.heightInput,
               gender = saved.gender,
               activityLevel = saved.activityLevel,
+              userName = saved.userName,
+              avatarId = saved.avatarId,
+              bannerId = saved.bannerId,
+              customAvatarUri = saved.customAvatarUri,
+              customBannerUri = saved.customBannerUri,
               result = saved,
               isSaved = true
             )
@@ -140,6 +170,85 @@ class MetabolicViewModel(
 
   fun selectTab(tab: HubTab) {
     _selectedTab.value = tab
+  }
+
+  fun selectProfileSubSection(subSection: ProfileSubSection) {
+    _profileSubSection.value = subSection
+  }
+
+  fun openEditHeaderDialog() {
+    val current = _profileState.value
+    _editHeaderDialogState.value = EditHeaderDialogState(
+      isVisible = true,
+      userName = current.userName,
+      avatarId = current.avatarId,
+      bannerId = current.bannerId,
+      customAvatarUri = current.customAvatarUri,
+      customBannerUri = current.customBannerUri
+    )
+  }
+
+  fun closeEditHeaderDialog() {
+    _editHeaderDialogState.value = EditHeaderDialogState(isVisible = false)
+  }
+
+  fun onHeaderNameChanged(name: String) {
+    _editHeaderDialogState.update { it.copy(userName = name.take(24)) }
+  }
+
+  fun onHeaderAvatarSelected(avatarId: String) {
+    _editHeaderDialogState.update { it.copy(avatarId = avatarId, customAvatarUri = null) }
+  }
+
+  fun onHeaderBannerSelected(bannerId: String) {
+    _editHeaderDialogState.update { it.copy(bannerId = bannerId, customBannerUri = null) }
+  }
+
+  fun onHeaderCustomAvatarSelected(filePath: String?) {
+    _editHeaderDialogState.update { it.copy(customAvatarUri = filePath) }
+  }
+
+  fun onHeaderCustomBannerSelected(filePath: String?) {
+    _editHeaderDialogState.update { it.copy(customBannerUri = filePath) }
+  }
+
+  fun saveProfileHeader() {
+    val state = _editHeaderDialogState.value
+    val name = if (state.userName.isBlank()) "Meu Perfil" else state.userName.trim()
+
+    _profileState.update { current ->
+      val updatedResult = current.result?.copy(
+        userName = name,
+        avatarId = state.avatarId,
+        bannerId = state.bannerId,
+        customAvatarUri = state.customAvatarUri,
+        customBannerUri = state.customBannerUri
+      )
+      current.copy(
+        userName = name,
+        avatarId = state.avatarId,
+        bannerId = state.bannerId,
+        customAvatarUri = state.customAvatarUri,
+        customBannerUri = state.customBannerUri,
+        result = updatedResult
+      )
+    }
+
+    val currentResult = _profileState.value.result
+    if (currentResult != null) {
+      viewModelScope.launch {
+        repository.saveUserProfile(
+          currentResult.copy(
+            userName = name,
+            avatarId = state.avatarId,
+            bannerId = state.bannerId,
+            customAvatarUri = state.customAvatarUri,
+            customBannerUri = state.customBannerUri
+          )
+        )
+      }
+    }
+    closeEditHeaderDialog()
   }
 
   fun setTimeframeMode(mode: TimeframeMode) {
@@ -291,7 +400,12 @@ class MetabolicViewModel(
       heightCm = height,
       ageYears = age,
       gender = state.gender,
-      activityLevel = state.activityLevel
+      activityLevel = state.activityLevel,
+      userName = state.userName,
+      avatarId = state.avatarId,
+      bannerId = state.bannerId,
+      customAvatarUri = state.customAvatarUri,
+      customBannerUri = state.customBannerUri
     )
   }
 

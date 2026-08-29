@@ -44,8 +44,17 @@ data class MetabolicCalculationResult(
   val weightKg: Double,
   val heightCm: Double,
   val gender: Gender,
-  val activityLevel: ActivityLevel
-)
+  val activityLevel: ActivityLevel,
+  val dailyWaterRequirementMl: Int = (weightKg * 35).toInt(), // Quantidade de água diária necessária (35ml/kg)
+  val userName: String = "Meu Perfil",
+  val avatarId: String = "avatar_1",
+  val bannerId: String = "banner_1",
+  val customAvatarUri: String? = null,
+  val customBannerUri: String? = null
+) {
+  val dailyWaterRequirementLiters: Double
+    get() = dailyWaterRequirementMl / 1000.0
+}
 
 object MetabolicCalculator {
   /**
@@ -77,15 +86,36 @@ object MetabolicCalculator {
     return bmr * activityLevel.factor
   }
 
+  /**
+   * Calcula a quantidade de água recomendada por dia em mililitros (ml)
+   * Base científica: 35 ml por kg de peso corporal (com pequeno acréscimo proporcional para atividades intensas)
+   */
+  fun calculateWaterIntake(weightKg: Double, activityLevel: ActivityLevel): Int {
+    val mlPerKg = when (activityLevel) {
+      ActivityLevel.SEDENTARY -> 35.0
+      ActivityLevel.LIGHT -> 35.0
+      ActivityLevel.MODERATE -> 38.0
+      ActivityLevel.INTENSE -> 40.0
+      ActivityLevel.VERY_INTENSE -> 45.0
+    }
+    return (weightKg * mlPerKg).toInt()
+  }
+
   fun calculate(
     weightKg: Double,
     heightCm: Double,
     ageYears: Int,
     gender: Gender,
-    activityLevel: ActivityLevel
+    activityLevel: ActivityLevel,
+    userName: String = "Meu Perfil",
+    avatarId: String = "avatar_1",
+    bannerId: String = "banner_1",
+    customAvatarUri: String? = null,
+    customBannerUri: String? = null
   ): MetabolicCalculationResult {
     val bmr = calculateBmr(weightKg, heightCm, ageYears, gender)
     val totalExpenditure = calculateTotalExpenditure(bmr, activityLevel)
+    val waterMl = calculateWaterIntake(weightKg, activityLevel)
     return MetabolicCalculationResult(
       bmr = bmr,
       dailyCaloricExpenditure = totalExpenditure,
@@ -93,7 +123,13 @@ object MetabolicCalculator {
       weightKg = weightKg,
       heightCm = heightCm,
       gender = gender,
-      activityLevel = activityLevel
+      activityLevel = activityLevel,
+      dailyWaterRequirementMl = waterMl,
+      userName = userName,
+      avatarId = avatarId,
+      bannerId = bannerId,
+      customAvatarUri = customAvatarUri,
+      customBannerUri = customBannerUri
     )
   }
 }
